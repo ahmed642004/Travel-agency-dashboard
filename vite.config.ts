@@ -6,6 +6,7 @@ import tsconfigPaths from "vite-tsconfig-paths";
 export default defineConfig({
   plugins: [tailwindcss(), reactRouter(), tsconfigPaths()],
   ssr: {
-    noExternal: ["/@syncfusion/"],
+    // Bundle all Syncfusion packages during SSR to ensure proper ESM interop
+    noExternal: [/^@syncfusion\/./],
   },
 });

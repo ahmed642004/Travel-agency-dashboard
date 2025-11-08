@@ -26,11 +26,23 @@ export function parseMarkdownToJson(markdownText: string): unknown | null {
   return null;
 }
 
-export function parseTripData(jsonString: string): Trip | null {
+export function parseTripData(input: unknown): Trip | null {
   try {
-    const data: Trip = JSON.parse(jsonString);
+    if (input === null || input === undefined) return null;
 
-    return data;
+    if (typeof input === "object") {
+      // Already an object (likely stored as structured data)
+      return input as Trip;
+    }
+
+    if (typeof input === "string") {
+      const jsonString = input.trim();
+      if (!jsonString) return null;
+      return JSON.parse(jsonString) as Trip;
+    }
+
+    // Unsupported type (number, boolean, etc.)
+    return null;
   } catch (error) {
     console.error("Failed to parse trip data:", error);
     return null;

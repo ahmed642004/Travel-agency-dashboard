@@ -5,11 +5,12 @@ import {
   Outlet,
   Scripts,
   ScrollRestoration,
+  useNavigation,
 } from "react-router";
 
 import type { Route } from "./+types/root";
 import "./app.css";
-
+import { registerLicense } from "@syncfusion/ej2-base";
 export const links: Route.LinksFunction = () => [
   { rel: "preconnect", href: "https://fonts.googleapis.com" },
   {
@@ -22,8 +23,6 @@ export const links: Route.LinksFunction = () => [
     href: "https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap",
   },
 ];
-import pkg from '@syncfusion/ej2-base';
-const {registerLicense} = pkg;
 registerLicense(import.meta.env.VITE_SYNCFUSION_LICENSE_KEY);
 export function Layout({ children }: { children: React.ReactNode }) {
   return (
@@ -43,8 +42,26 @@ export function Layout({ children }: { children: React.ReactNode }) {
   );
 }
 
+function LoadingOverlay() {
+  return (
+    <div className="fixed inset-0 z-[1000] grid place-items-center bg-black/30">
+      <div className="flex flex-col items-center gap-3">
+        <div className="h-10 w-10 animate-spin rounded-full border-4 border-gray-300 border-t-primary-500" />
+        <p className="text-white">Loading...</p>
+      </div>
+    </div>
+  );
+}
+
 export default function App() {
-  return <Outlet />;
+  const navigation = useNavigation();
+  const busy = navigation.state !== "idle";
+  return (
+    <>
+      <Outlet />
+      {busy && <LoadingOverlay />}
+    </>
+  );
 }
 
 export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
