@@ -2,7 +2,9 @@
 .env
 .env.local
 .env.*.local
-
+.idea/
+*.iml
+.vscode/
 /node_modules/
 
 # React Router
