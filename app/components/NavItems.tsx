@@ -7,12 +7,12 @@ import {
 } from "react-router";
 import { sidebarItems } from "~/constants";
 import { cn } from "~/lib/utils";
-import { logoutUser } from "~/appwrite/auth";
+import { logoutUser } from "~/supabase/supabase";
 
 const NavItems = ({ handleClick }: { handleClick?: () => void }) => {
   const user = useLoaderData();
   const navigate = useNavigate();
-
+  console.log(user.user);
   const handleLogout = async () => {
     await logoutUser();
     navigate("/sign-in");
@@ -55,13 +55,13 @@ const NavItems = ({ handleClick }: { handleClick?: () => void }) => {
         </nav>
         <footer className="nav-footer">
           <img
-            src={user?.imageUrl || "/assets/images/david.webp"}
+            src={user.user?.imageUrl || "/assets/images/david.webp"}
             alt="User Image"
             referrerPolicy="no-referrer"
           />
           <article>
-            <h2>{user?.name}</h2>
-            <p>{user?.email}</p>
+            <h2>{user.user.name}</h2>
+            <p>{user.user.email}</p>
           </article>
           <button className="cursor-pointer" onClick={handleLogout}>
             <img

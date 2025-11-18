@@ -1,23 +1,23 @@
-import { Outlet, redirect } from "react-router";
+import { Outlet, redirect, useLoaderData } from "react-router";
 import { SidebarComponent } from "@syncfusion/ej2-react-navigations";
-
-import { account } from "~/appwrite/client";
-import { getExistingUser, storeUserData } from "~/appwrite/auth";
+import supabase from "~/supabase/supabase";
+import { getExistingUser } from "~/supabase/supabase";
 import { MobileSidebar, NavItems } from "~/components";
+import { UserProvider } from "~/context/userContext"; // ✅ Add this import
 
 export async function clientLoader() {
   try {
-    const user = await account.get();
+    const { data: authData } = await supabase.auth.getUser();
+    const authUser = authData?.user;
+    if (!authUser?.id) return redirect("/sign-in");
 
-    if (!user.$id) return redirect("/sign-in");
-
-    const existingUser = await getExistingUser(user.$id);
-
-    if (existingUser?.status === "user") {
+    const existingUser = await getExistingUser(authUser.id);
+    if (!existingUser) return redirect("/");
+    if (existingUser.status === "user") {
       return redirect("/");
     }
 
-    return existingUser?.$id ? existingUser : await storeUserData();
+    return { user: existingUser }; // ✅ Return as object with user key
   } catch (e) {
     console.log("Error in clientLoader", e);
     return redirect("/sign-in");
@@ -25,20 +25,25 @@ export async function clientLoader() {
 }
 
 const AdminLayout = () => {
+  const { user } = useLoaderData<typeof clientLoader>(); // ✅ Get user from loader
+  console.log(user);
   return (
-    <div className="admin-layout">
-      <MobileSidebar />
+    <UserProvider user={user}>
+      <div className="admin-layout">
+        <MobileSidebar />
 
-      <aside className="w-full max-w-[270px] hidden lg:block">
-        <SidebarComponent width={270} enableGestures={false}>
-          <NavItems />
-        </SidebarComponent>
-      </aside>
+        <aside className="w-full max-w-[270px] hidden lg:block">
+          <SidebarComponent width={270} enableGestures={false}>
+            <NavItems />
+          </SidebarComponent>
+        </aside>
 
-      <aside className="children">
-        <Outlet />
-      </aside>
-    </div>
+        <aside className="children">
+          <Outlet />
+        </aside>
+      </div>
+    </UserProvider>
   );
 };
+
 export default AdminLayout;

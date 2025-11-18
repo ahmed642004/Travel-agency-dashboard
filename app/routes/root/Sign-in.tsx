@@ -1,34 +1,20 @@
 import { Link, redirect } from "react-router";
 import { ButtonComponent } from "@syncfusion/ej2-react-buttons";
-import { loginWithGoogleAs } from "~/appwrite/auth";
-import { account, database, appwriteConfig } from "~/appwrite/client";
-import { useEffect } from "react";
+import { loginWithGoogleSupa } from "~/supabase/supabase";
+import supabase from "~/supabase/supabase";
+import { useState } from "react";
 
 export async function clientLoader() {
   try {
-    const user = await account.get();
-
-    if (user.$id) return redirect("/");
+    const { data: authData } = await supabase.auth.getUser();
+    const user = authData?.user;
+    if (user?.id) return redirect("/");
   } catch (e) {
     console.log("Error fetching user", e);
   }
 }
 
 const SignIn = () => {
-  useEffect(() => {
-    (async () => {
-      try {
-        const { documents, total } = await database.listDocuments(
-          appwriteConfig.databaseId,
-          appwriteConfig.userCollectionId,
-        );
-        console.log("All users:", documents);
-        console.log("Total users:", total);
-      } catch (error) {
-        console.error("Error listing users:", error);
-      }
-    })();
-  }, []);
   return (
     <main className="auth">
       <section className="size-full glassmorphism flex-center px-6">
@@ -60,32 +46,28 @@ const SignIn = () => {
               type="button"
               iconCss="e-search-icon"
               className="button-class !h-11 !w-full"
-              onClick={() => loginWithGoogleAs("user")}
+              onClick={() => loginWithGoogleSupa("user")}
             >
               <img
                 src="/assets/icons/google.svg"
                 className="size-5"
                 alt="google"
               />
-              <span className="p-18-semibold text-white">
-                Sign in as Client
-              </span>
+              <span className="p-18-semibold text-white">Sign in as User</span>
             </ButtonComponent>
 
             <ButtonComponent
               type="button"
               iconCss="e-search-icon"
               className="button-class !h-11 !w-full !bg-dark-400 hover:!bg-dark-300"
-              onClick={() => loginWithGoogleAs("admin")}
+              onClick={() => loginWithGoogleSupa("admin")}
             >
               <img
                 src="/assets/icons/google.svg"
                 className="size-5"
                 alt="google"
               />
-              <span className="p-18-semibold text-white">
-                Sign in as Admin
-              </span>
+              <span className="p-18-semibold text-white">Sign in as Admin</span>
             </ButtonComponent>
           </div>
         </div>

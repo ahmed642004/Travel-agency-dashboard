@@ -39,6 +39,7 @@
     --color-red-100: #ff543d;
 
     --background-image-auth: url("/assets/images/auth-img.webp");
+    --background-image-home: url("/assets/images/hero-img-user.png");
     --background-image-hero: url("/assets/images/hero-img.png");
     --background-image-card-1: url("/assets/images/card-img-1.png");
     --background-image-card-2: url("/assets/images/card-img-2.png");
@@ -547,4 +548,22 @@ body {
 }
 .e-dropdownbase .e-list-item{
     text-indent: 10px;
+}
+.travel-hero {
+    @apply bg-hero bg-origin-content bg-cover;
+
+    div {
+        @apply flex flex-col bg-linear100 bg-cover;
+
+        section {
+            @apply py-48 justify-center items-start flex flex-col gap-6;
+
+            article {
+                @apply flex flex-col w-full md:max-w-[520px] gap-3.5;
+                p {
+                    @apply text-lg font-normal text-dark-400;
+                }
+            }
+        }
+    }
 }

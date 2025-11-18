@@ -13,6 +13,7 @@
     "@google/generative-ai": "^0.24.1",
     "@react-router/node": "^7.9.2",
     "@react-router/serve": "^7.9.2",
+    "@supabase/supabase-js": "^2.81.0",
     "@syncfusion/ej2-base": "^31.2.2",
     "@syncfusion/ej2-react-buttons": "^31.2.3",
     "@syncfusion/ej2-react-charts": "^31.2.3",

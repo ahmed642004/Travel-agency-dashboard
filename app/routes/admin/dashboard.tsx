@@ -1,12 +1,12 @@
 import { Header, StatsCard, TripCard } from "~/components";
-import { getUser, getUsers } from "~/appwrite/auth";
+import { getUser, getUsersSupabase } from "~/supabase/supabase";
 import type { Route } from "./+types/dashboard";
 import {
   getTripsByTravelStyle,
   getUserGrowthPerDay,
   getUsersAndTripsStats,
-} from "~/appwrite/dashboard";
-import { getAllTrips } from "~/appwrite/trips";
+} from "~/supabase/dashboard";
+import { getAllTrips } from "~/supabase/supabase";
 import { parseTripData } from "~/lib/utils";
 import {
   Category,
@@ -40,10 +40,10 @@ export const clientLoader = async () => {
     await getAllTrips(4, 0),
     await getUserGrowthPerDay(),
     await getTripsByTravelStyle(),
-    await getUsers(4, 0),
+    await getUsersSupabase(4, 0),
   ]);
-  const allTrips = trips.allTrips.map(({ $id, tripDetail, imageUrls }) => ({
-    id: $id,
+  const allTrips = trips.allTrips.map(({ id, tripDetail, imageUrls }) => ({
+    id: id,
     ...parseTripData(tripDetail),
     imageUrls: imageUrls ?? [],
   }));
@@ -70,7 +70,6 @@ export default function Dashboard({ loaderData }: Route.ComponentProps) {
     name: trip.name,
     interests: trip.interests,
   }));
-  console.log(trips[0].imageUrl);
   const usersAndTrips = [
     {
       title: "Latest user signups",
@@ -85,6 +84,7 @@ export default function Dashboard({ loaderData }: Route.ComponentProps) {
       headerText: "Interests",
     },
   ];
+
   return (
     <div className="dashboard wrapper">
       <Header
@@ -117,13 +117,14 @@ export default function Dashboard({ loaderData }: Route.ComponentProps) {
         <div className="trip-grid">
           {allTrips.map((trip) => (
             <TripCard
-              key={trip.id}
+              key={trip.name}
               id={trip.id.toString()}
               name={trip.name!}
               imageUrl={trip.imageUrls[0]}
               location={trip.itinerary?.[0]?.location ?? ""}
               tags={[trip.interests!, trip.travelStyle!]}
               price={trip.estimatedPrice!}
+              userRole={user?.status}
             />
           ))}
         </div>

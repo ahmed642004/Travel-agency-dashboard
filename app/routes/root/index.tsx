@@ -1,24 +1,13 @@
 import { redirect } from "react-router";
-import { account, database, appwriteConfig } from "~/appwrite/client";
-import { Query } from "appwrite";
+import supabase from "~/supabase/supabase";
 
 export async function clientLoader() {
   try {
-    // If no authenticated Appwrite account, send to sign-in
-    const current = await account.get();
-    if (!current?.$id) return redirect("/sign-in");
+    // If no authenticated Supabase user, send to sign-in
+    const { data: authData } = await supabase.auth.getUser();
+    const current = authData?.user;
+    if (!current?.id) return redirect("/sign-in");
 
-    // Fetch user role documents for this account
-    const { documents } = await database.listDocuments(
-      appwriteConfig.databaseId,
-      appwriteConfig.userCollectionId,
-      [Query.equal("accountId", current.$id), Query.select(["status"])],
-    );
-
-    const hasAdmin = documents.some((d) => d.status === "admin");
-
-    // Redirect based on role
-    if (hasAdmin) return redirect("/dashboard");
     return redirect("/home");
   } catch (e) {
     console.error("Root index redirect error:", e);

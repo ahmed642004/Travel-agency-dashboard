@@ -11,8 +11,8 @@ import {
 import React, { useRef, useState } from "react";
 import { world_map } from "~/constants/world_map";
 import { ButtonComponent } from "@syncfusion/ej2-react-buttons";
-import { account } from "~/appwrite/client";
-import { useNavigate } from "react-router";
+import { redirect, useNavigate } from "react-router";
+import supabase from "~/supabase/supabase";
 
 export const loader = async () => {
   const response = await fetch(
@@ -160,13 +160,12 @@ const CreateTrip = ({ loaderData }: Route.ComponentProps) => {
       return;
     }
 
-    const user = await account.get();
-    if (!user.$id) {
+    const user = await supabase.auth.getUser();
+    if (!user.data.user) {
       console.log("User not logged in");
       setLoading(false);
       return;
     }
-
     try {
       const response = await fetch("/api/create-trip", {
         method: "POST",
@@ -180,11 +179,11 @@ const CreateTrip = ({ loaderData }: Route.ComponentProps) => {
           interests: formData.interest,
           budget: formData.budget,
           groupType: formData.groupType,
-          userId: user.$id,
+          userId: user.data.user.id,
         }),
       });
       const result: CreateTripResponse = await response.json();
-      if (result?.id) navigate(`/trips/${result.id}`);
+      if (result?.id) navigate(`/admin/trips/${result.id}`);
       else console.log("Error creating trip");
     } catch (error) {
       console.error("Error logging trip:", error);

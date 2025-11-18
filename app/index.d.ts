@@ -4,6 +4,7 @@ declare interface BaseUser {
   email: string;
   dateJoined: string;
   imageUrl: string;
+  status: "user" | "admin";
 }
 
 declare interface UserData extends BaseUser {
@@ -73,6 +74,7 @@ declare interface Trip {
   weatherInfo: string[];
   location: Location;
   payment_link: string;
+  rating: string;
 }
 
 declare interface TripCardProps {
@@ -82,6 +84,7 @@ declare interface TripCardProps {
   imageUrl: string;
   tags: string[];
   price: string;
+  userRole?: string;
 }
 
 declare interface StatsCard {

@@ -4,18 +4,16 @@ import {
   ColumnsDirective,
   GridComponent,
 } from "@syncfusion/ej2-react-grids";
-import { getUsers } from "~/appwrite/auth";
+import { getUsersSupabase } from "~/supabase/supabase";
 import type { Route } from "./+types/all-users";
 import { cn, formatDate } from "~/lib/utils";
 
 export const loader = async () => {
-  const { users, total } = await getUsers(10, 0);
-  console.log(users);
+  const { users, total } = await getUsersSupabase(10, 0);
   return { users, total };
 };
 export default function AllUsers({ loaderData }: Route.ComponentProps) {
   const { users, total } = loaderData;
-  console.log(users);
   return (
     <main className="all-users wrapper">
       <Header

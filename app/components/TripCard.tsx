@@ -6,6 +6,7 @@ import {
   ChipsDirective,
 } from "@syncfusion/ej2-react-buttons";
 import { cn, getFirstWord } from "~/lib/utils";
+import { useUser } from "~/context/userContext";
 
 const TripCard = ({
   id,
@@ -15,16 +16,10 @@ const TripCard = ({
   tags,
   price,
 }: TripCardProps) => {
-  const path = useLocation();
+  const { user } = useUser();
+  const to = user?.status === "admin" ? `/admin/trips/${id}` : `/trips/${id}`;
   return (
-    <Link
-      to={
-        path.pathname === "/" || path.pathname.startsWith("/travel")
-          ? `/travel/${id}`
-          : `/trips/${id}`
-      }
-      className="trip-card"
-    >
+    <Link to={to} className="trip-card">
       <img src={imageUrl} alt={name} />
       <article>
         <h2>{name}</h2>
