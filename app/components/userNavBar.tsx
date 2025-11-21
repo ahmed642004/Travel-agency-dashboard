@@ -19,7 +19,6 @@ const userNavBar = () => {
     navigate("/sign-in");
   };
   const isOnTripDetailPage = location.pathname.startsWith("/trips/");
-  console.log(isOnTripDetailPage);
   return (
     <nav
       className={cn(isOnTripDetailPage ? "bg-white" : "", "w-full sticky z-50")}

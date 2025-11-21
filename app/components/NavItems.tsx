@@ -12,7 +12,6 @@ import { logoutUser } from "~/supabase/supabase";
 const NavItems = ({ handleClick }: { handleClick?: () => void }) => {
   const user = useLoaderData();
   const navigate = useNavigate();
-  console.log(user.user);
   const handleLogout = async () => {
     await logoutUser();
     navigate("/sign-in");

@@ -16,7 +16,9 @@ export async function clientLoader() {
     if (existingUser.status === "user") {
       return redirect("/");
     }
-
+    if (existingUser.request_status === "pending") {
+      return redirect("/auth/callback?role=admin");
+    }
     return { user: existingUser }; // ✅ Return as object with user key
   } catch (e) {
     console.log("Error in clientLoader", e);
@@ -26,7 +28,6 @@ export async function clientLoader() {
 
 const AdminLayout = () => {
   const { user } = useLoaderData<typeof clientLoader>(); // ✅ Get user from loader
-  console.log(user);
   return (
     <UserProvider user={user}>
       <div className="admin-layout">

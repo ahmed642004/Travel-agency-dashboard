@@ -15,10 +15,6 @@ export async function clientLoader() {
 
     const existingUser = await getExistingUser(current.id);
     if (!existingUser) return redirect("/");
-
-    if (existingUser.status === "admin") {
-      return redirect("/dashboard");
-    }
     const user = await getUser();
     return { user };
   } catch (e) {

@@ -50,60 +50,92 @@ export const storeUserData = async (desiredStatus: UserRole) => {
     const user = authData?.user;
     if (!user) throw new Error("User not found");
 
-    // Try to get provider access token and avatar
-    const { data: sessionData } = await supabase.auth.getSession();
-    const providerToken = sessionData?.session?.provider_token as
-      | string
-      | undefined;
+    const profilePicture = user.user_metadata?.avatar_url ?? null;
 
-    let profilePicture: string | null = null;
-    if (providerToken) {
-      // profilePicture = await getGooglePicture(providerToken);
-    }
-    profilePicture ||= user.user_metadata?.avatar_url ?? null;
-
-    const payload = {
+    // 1. Calculate defaults for a BRAND NEW user
+    // If they want to be admin, they start as 'user' (restricted) with a 'pending' request
+    const newPayload = {
       accountId: user.id,
       email: user.email,
       name: user.user_metadata?.name || user.email,
       imageUrl: profilePicture,
       joinedAt: new Date().toISOString(),
-      status: desiredStatus,
+      status: desiredStatus === 'admin' ? 'user' : desiredStatus,
+      request_status: desiredStatus === 'admin' ? 'pending' : 'approved',
     };
 
-    // ✅ 1. Check if user already exists
+    // 2. Check if user ALREADY exists
     const { data: existing, error: selectError } = await supabase
       .from("users")
-      .select("accountId")
+      .select("*")
       .eq("accountId", user.id)
       .maybeSingle();
 
     if (selectError) throw selectError;
 
+    let userId = existing?.id;
+
     if (existing) {
-      // ✅ 2. Update only if status changed
-      const { data: updated, error: updateError } = await supabase
+      // ✅ CRITICAL FIX: DETERMINE STATUS BASED ON HISTORY, NOT JUST URL
+
+      // A. If they are ALREADY an admin in DB, keep them as admin.
+      //    Otherwise, fall back to what the URL requested (usually 'user' or 'pending').
+      const finalStatus = existing.status === 'admin' ? 'admin' : newPayload.status;
+
+      // B. If they are ALREADY approved/admin, keep request_status as 'approved'.
+      //    Otherwise, overwrite it with 'pending' (if they are re-applying) or their current status.
+      const finalRequestStatus = existing.status === 'admin' ? 'approved' : newPayload.request_status;
+
+      const { error: updateError } = await supabase
         .from("users")
-        .update({ status: desiredStatus })
-        .eq("accountId", user.id)
-        .select()
-        .single();
+        .update({
+          status: finalStatus,
+          request_status: finalRequestStatus,
+          // Update profile pic/name if changed, but optional
+          imageUrl: profilePicture || existing.imageUrl,
+        })
+        .eq("accountId", user.id);
 
       if (updateError) throw updateError;
-      return updated;
-    }
-    if (!existing) {
-      // ✅ 3. Insert only if not found
+    } else {
+      // --- NEW USER LOGIC (Insert defaults) ---
       const { data: inserted, error: insertError } = await supabase
         .from("users")
-        .insert(payload)
+        .insert(newPayload)
         .select()
         .single();
 
       if (insertError) throw insertError;
-
-      return inserted;
+      userId = inserted.id;
     }
+
+    // 3. HANDLE ADMIN REQUEST TABLE
+    if (desiredStatus === 'admin' && userId) {
+      const { data: existingRequest } = await supabase
+        .from("admin_requests")
+        .select("id, reqStatus")
+        .eq("accountId", user.id)
+        .maybeSingle();
+
+      if (!existingRequest) {
+        // Only create request if one doesn't exist at all
+        await supabase.from("admin_requests").insert({
+          user_id: userId,
+          accountId: user.id,
+          email: user.email!,
+          name: user.user_metadata?.name || user.email!,
+          reqStatus: "pending",
+        });
+      }
+      // Note: We do NOT update the admin_requests table here.
+      // If it was 'approved' there, we leave it alone.
+    }
+
+    return {
+      user: existing || newPayload,
+      needsApproval: desiredStatus === 'admin'
+    };
+
   } catch (error) {
     console.error("Supabase: Error storing user data", error);
     return null;
@@ -174,10 +206,25 @@ export const getUser = async () => {
       .from("users")
       .select("name, email, imageUrl, joinedAt, accountId, status")
       .eq("accountId", user.id)
-      .single();
+      .maybeSingle(); // ✅ Changed from .single() to .maybeSingle()
+
+    // ✅ Handle case where user doesn't exist in database
+    if (!data) {
+      console.log("User authenticated but no database record found");
+
+      // Option 1: Create the user record automatically
+      const newUserData = await storeUserData('user'); // Default to regular user
+      if (newUserData?.user) {
+        return newUserData.user;
+      }
+
+      // Option 2: Or redirect to sign-in if creation fails
+      return redirect("/sign-in");
+    }
 
     if (error) throw error;
-    return data ?? redirect("/sign-in");
+
+    return data;
   } catch (error) {
     console.error("Supabase: Error fetching user", error);
     return null;
